@@ -106,8 +106,9 @@ namespace InverseCurveSidebarBot
 
                 var exchangeRate = await _curveExchangeRateService.GetExchangeRateWithoutFees();
                 var exchangeRateFormated = exchangeRate.ToString("C4");
-                
-                playing = exchangeRateFormated;
+                var unitsFormatted = string.Format(new ShortHandCurrencyFormatter(), "{0:SH}", _settings.Units);
+
+                playing = $"{exchangeRateFormated} @ {unitsFormatted}";
 
                 await UpdateDiscordInfo(nickname, playing);
             }

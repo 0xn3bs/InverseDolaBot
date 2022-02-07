@@ -21,6 +21,7 @@ namespace InverseCurveSidebarBot
         private readonly string? _poolAddress;
         private readonly int _i;
         private readonly int _j;
+        private readonly int _units;
 
         private BigDecimal _adminFee;
         private BigDecimal _fee;
@@ -30,8 +31,9 @@ namespace InverseCurveSidebarBot
             _botSettings = settings.Value;
             _web3 = new Web3(_botSettings.Web3);
             _poolAddress = _botSettings.Pool;
-            _i = _botSettings.I ?? 0;
-            _j = _botSettings.J ?? 1;
+            _i = _botSettings.I;
+            _j = _botSettings.J;
+            _units = _botSettings.Units;
 
             _ = CacheFees();
         }
@@ -57,7 +59,7 @@ namespace InverseCurveSidebarBot
             {
                 i = _i,
                 j = _j,
-                dx = BigInteger.Pow(10, 18)
+                dx = BigInteger.Pow(10, 18) * _units
             };
 
             var underylingDyHandler = _web3.Eth.GetContractQueryHandler<GetDyUnderlyingFunction>();
@@ -69,6 +71,8 @@ namespace InverseCurveSidebarBot
         public async Task<decimal> GetExchangeRateWithFees()
         {
             var exchangeRateWithFees = await _GetExchangeRateWithFees();
+            exchangeRateWithFees /= _units;
+
             var underylingDyInEth = Web3.Convert.FromWei(exchangeRateWithFees);
 
             return underylingDyInEth;
@@ -81,6 +85,7 @@ namespace InverseCurveSidebarBot
 
             var denom = 1 - _fee - _fee * _adminFee;
             var underylingDyWithoutFees = underylingDyInEth / denom;
+            underylingDyWithoutFees /= _units;
 
             var wei = Web3.Convert.ToWei(underylingDyWithoutFees);
 
